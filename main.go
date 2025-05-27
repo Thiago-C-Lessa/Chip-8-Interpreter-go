@@ -14,6 +14,8 @@
   test roms: https://github.com/corax89/chip8-test-rom
   found on this video: https://www.youtube.com/watch?v=YHkBgR6yvbY
 
+	opcodes: https://github.com/trapexit/chip-8_documentation
+
 
 
   Memory map
@@ -54,7 +56,7 @@ import (
 )
 
 const (
-	ROM = "chip8-test-rom-master/test_opcode.ch8"
+	ROM = "test_rom/BC_test.ch8"
 	//ROM = "roms/Pong (1 player).ch8"
 )
 

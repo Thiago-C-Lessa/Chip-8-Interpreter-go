@@ -9,17 +9,20 @@ import (
 type CHIP8 struct {
 	rom                              string
 	ram                              [4096]uint8
+	stack                            [16]uint16
 	sound_registrer, video_registrer uint8
 	general_use_registrer            [16]uint8 // arr[0x0] até arr[0xF]
 	pc                               uint16    // currently executing address
 	sp                               uint8     //topmost level of the stack
 	screen                           [32][64]uint8
+	opcode                           uint16
 }
 
 // Init initialize chip8 struct
 func (chip8 *CHIP8) Init(rom string) {
 	chip8.rom = rom
 	chip8.pc = 0x200 //0x200 (512) Start of most Chip-8 programs
+	chip8.sp = 0x00
 
 	chip8.loadFont()
 	chip8.loadRom()
@@ -148,8 +151,8 @@ func (chip8 *CHIP8) loadRom() {
 	fmt.Println("\t", chip8.rom)
 	//fmt.Println(chip8.readRom())
 	byteArr := chip8.readRom()
-	for i, b := range byteArr {
-		chip8.ram[0x200+i] = b
+	for i, byt := range byteArr {
+		chip8.ram[0x200+i] = byt
 	}
 }
 
@@ -171,4 +174,38 @@ func (chip8 *CHIP8) readRom() []byte {
 	fmt.Println("\tRead file size", len(buffer))
 
 	return buffer
+}
+
+func (chip8 *CHIP8) parseOpcode() {
+	chip8.opcode = uint16(chip8.ram[chip8.pc])<<8 | uint16(chip8.ram[chip8.pc+1]) // envia um bit a direita e completa com o segundo, big-endian
+	fmt.Printf("%#x \n", chip8.opcode)
+
+	//dont forget to increse pc +=2
+	chip8.pc += 2
+}
+
+func (chip8 *CHIP8) interpretateOpcode() {
+	switch chip8.opcode & 0xF000 { //F seleciona o bit desejado
+	case 0x0000:
+		switch chip8.opcode & 0x00FF {
+
+		case 0x00E0: //clear screen
+			for i, _ := range chip8.screen[] {
+				for j, _ := range chip8.screen[i] {
+					chip8.screen[i][j] = 0
+				}
+			}
+		case 0x00EE: //Return from subroutine. Set the PC to the address at the top of the stack and subtract 1 from the SP.
+			if chip8.sp <= 0 {
+				panic(fmt.Errorf("sp below 0"))
+			}
+			chip8.pc = chip8.stack[chip8.sp]
+			chip8.sp--
+		}
+	}
+}
+
+func (chip8 *CHIP8) cycle() {
+	chip8.parseOpcode()
+	chip8.interpretateOpcode()
 }
